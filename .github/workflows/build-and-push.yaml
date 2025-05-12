@@ -20,6 +20,7 @@ on:
       - '**.adoc'
       - '*.txt'
     types: [labeled, opened, synchronize, reopened]
+  workflow_dispatch:
 jobs:
   # Ensure that tests pass before publishing a new image.
   build-and-push-ci:
