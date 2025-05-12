@@ -79,7 +79,7 @@ jobs:
           echo "ORCH_IMAGE_NAME=quay.io/trustyais390x/guardrails" >> $GITHUB_ENV
 
       - name: Set main-branch environment
-        if:  env.BUILD_CONTEXT == 'multiarch_build'
+        if:  env.BUILD_CONTEXT == 'main'
         run: |
           echo "TAG=latest" >> $GITHUB_ENV
           echo "IMAGE_NAME=${{ vars.QUAY_RELEASE_REPO }}" >> $GITHUB_ENV
@@ -87,14 +87,14 @@ jobs:
           echo "JOB_IMAGE_NAME=${{ vars.QUAY_RELEASE_LMES_JOB_REPO }}" >> $GITHUB_ENV
           echo "ORCH_IMAGE_NAME=${{ vars.QUAY_RELEASE_GUARDRAILS_REPO }}" >> $GITHUB_ENV
 
-    #  - name: Set tag environment
-    #    if: env.BUILD_CONTEXT == 'tag'
-    #    run: |
-    #      echo "TAG=${{ github.ref_name }}" >> $GITHUB_ENV
-    #      echo "IMAGE_NAME=${{ vars.QUAY_RELEASE_REPO }}" >> $GITHUB_ENV
-    #      echo "DRIVER_IMAGE_NAME=${{ vars.QUAY_RELEASE_LMES_DRIVER_REPO }}" >> $GITHUB_ENV
-    #      echo "JOB_IMAGE_NAME=${{ vars.QUAY_RELEASE_LMES_JOB_REPO }}" >> $GITHUB_ENV
-    #      echo "ORCH_IMAGE_NAME=${{ vars.QUAY_RELEASE_GUARDRAILS_REPO }}" >> $GITHUB_ENV
+      - name: Set tag environment
+        if: env.BUILD_CONTEXT == 'tag'
+        run: |
+          echo "TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${{ vars.QUAY_RELEASE_REPO }}" >> $GITHUB_ENV
+          echo "DRIVER_IMAGE_NAME=${{ vars.QUAY_RELEASE_LMES_DRIVER_REPO }}" >> $GITHUB_ENV
+          echo "JOB_IMAGE_NAME=${{ vars.QUAY_RELEASE_LMES_JOB_REPO }}" >> $GITHUB_ENV
+          echo "ORCH_IMAGE_NAME=${{ vars.QUAY_RELEASE_GUARDRAILS_REPO }}" >> $GITHUB_ENV
 
       # Run docker commands
     #  - name: Put expiry date on CI-tagged image
