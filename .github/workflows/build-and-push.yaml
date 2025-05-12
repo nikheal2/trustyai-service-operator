@@ -66,11 +66,11 @@ jobs:
           echo "LMES JOB IMAGE AT: ${{ vars.QUAY_RELEASE_LMES_JOB_REPO }}:latest"
           echo "GUARDRAILS ORCH IMAGE AT: ${{ vars.QUAY_RELEASE_GUARDRAILS_REPO }}:latest"
 
-          echo "CI IMAGE AT: quay.io/trustyai/trustyai-service-operator-ci:${{ github.event.pull_request.head.sha }}"
+      #    echo "CI IMAGE AT: quay.io/trustyai/trustyai-service-operator-ci:${{ github.event.pull_request.head.sha }}"
       #
       # Set environments depending on context
       - name: Set CI environment
-        if:  env.BUILD_CONTEXT == 'ci'
+     #   if:  env.BUILD_CONTEXT == 'ci'
         run: |
           echo "TAG=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
           echo "IMAGE_NAME=quay.io/trustyais390x/operator-ci" >> $GITHUB_ENV
@@ -79,7 +79,7 @@ jobs:
           echo "ORCH_IMAGE_NAME=quay.io/trustyais390x/guardrails" >> $GITHUB_ENV
 
       - name: Set main-branch environment
-        if:  env.BUILD_CONTEXT == 'main'
+     #   if:  env.BUILD_CONTEXT == 'main'
         run: |
           echo "TAG=latest" >> $GITHUB_ENV
           echo "IMAGE_NAME=${{ vars.QUAY_RELEASE_REPO }}" >> $GITHUB_ENV
@@ -88,7 +88,7 @@ jobs:
           echo "ORCH_IMAGE_NAME=${{ vars.QUAY_RELEASE_GUARDRAILS_REPO }}" >> $GITHUB_ENV
 
       - name: Set tag environment
-        if: env.BUILD_CONTEXT == 'tag'
+      #  if: env.BUILD_CONTEXT == 'tag'
         run: |
           echo "TAG=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "IMAGE_NAME=${{ vars.QUAY_RELEASE_REPO }}" >> $GITHUB_ENV
@@ -104,15 +104,15 @@ jobs:
         run: docker login -u ${{ secrets.QUAY_ROBOT_USERNAME }} -p ${{ secrets.QUAY_ROBOT_SECRET }} quay.io
 
       - name: Set up QEMU
-        if: env.BUILD_CONTEXT == 'main' || env.BUILD_CONTEXT == 'tag'
+      #  if: env.BUILD_CONTEXT == 'main' || env.BUILD_CONTEXT == 'tag'
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker buildx
-        if: env.BUILD_CONTEXT == 'main' || env.BUILD_CONTEXT == 'tag'
+      #  if: env.BUILD_CONTEXT == 'main' || env.BUILD_CONTEXT == 'tag'
         uses: docker/setup-buildx-action@v3
 
       - name: Build and Push Main Image (multi-arch)
-        if: env.BUILD_CONTEXT == 'main' || env.BUILD_CONTEXT == 'tag'
+       # if: env.BUILD_CONTEXT == 'main' || env.BUILD_CONTEXT == 'tag'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -121,7 +121,7 @@ jobs:
           push: true
 
       - name: Build and Push LMES Driver Image (multi-arch)
-        if: env.BUILD_CONTEXT == 'main' || env.BUILD_CONTEXT == 'tag'
+      #  if: env.BUILD_CONTEXT == 'main' || env.BUILD_CONTEXT == 'tag'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -131,7 +131,7 @@ jobs:
           push: true
 
       - name: Build and Push LMES Job Image (multi-arch)
-        if: env.BUILD_CONTEXT == 'main' || env.BUILD_CONTEXT == 'tag'
+      #  if: env.BUILD_CONTEXT == 'main' || env.BUILD_CONTEXT == 'tag'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -141,7 +141,7 @@ jobs:
           push: true
 
       - name: Build and Push Guardrails Orchestrator Image (multi-arch)
-        if: env.BUILD_CONTEXT == 'main' || env.BUILD_CONTEXT == 'tag'
+      #  if: env.BUILD_CONTEXT == 'main' || env.BUILD_CONTEXT == 'tag'
         uses: docker/build-push-action@v6
         with:
           context: .
