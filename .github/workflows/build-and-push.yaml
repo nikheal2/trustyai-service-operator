@@ -19,7 +19,7 @@ on:
       - '**.md'
       - '**.adoc'
       - '*.txt'
-    types: [labeled, opened, synchronize, reopened]
+#    types: [labeled, opened, synchronize, reopened]
   workflow_dispatch:
 jobs:
   # Ensure that tests pass before publishing a new image.
@@ -30,29 +30,29 @@ jobs:
       security-events: write
       pull-requests: write
     steps: # Assign context variable for various action contexts (tag, main, CI)
-      - name: Assigning CI context
-        if: github.head_ref != '' && github.head_ref != 'main' && !startsWith(github.ref, 'refs/tags/v')
-        run: echo "BUILD_CONTEXT=ci" >> $GITHUB_ENV
-      - name: Assigning tag context
-        if: github.head_ref == '' && startsWith(github.ref, 'refs/tags/v')
-        run: echo "BUILD_CONTEXT=tag" >> $GITHUB_ENV
-      - name: Assigning main context
-        if: github.head_ref == '' && github.ref == 'refs/heads/main'
-        run: echo "BUILD_CONTEXT=main" >> $GITHUB_ENV
+ #     - name: Assigning CI context
+ #       if: github.head_ref != '' && github.head_ref != 'main' && !startsWith(github.ref, 'refs/tags/v')
+ #       run: echo "BUILD_CONTEXT=ci" >> $GITHUB_ENV
+ #     - name: Assigning tag context
+ #       if: github.head_ref == '' && startsWith(github.ref, 'refs/tags/v')
+ #       run: echo "BUILD_CONTEXT=tag" >> $GITHUB_ENV
+ #     - name: Assigning main context
+ #       if: github.head_ref == '' && github.ref == 'refs/heads/main'
+ #       run: echo "BUILD_CONTEXT=main" >> $GITHUB_ENV
       #
       # Run checkouts
-      - uses: mheap/github-action-required-labels@v4
-        if: env.BUILD_CONTEXT == 'ci'
-        with:
-          mode: minimum
-          count: 1
-          labels: "ok-to-test, lgtm, approved"
-      - uses: actions/checkout@v3
-        if: env.BUILD_CONTEXT == 'ci'
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions/checkout@v3
-        if: env.BUILD_CONTEXT == 'main' ||  env.BUILD_CONTEXT == 'tag'
+ #     - uses: mheap/github-action-required-labels@v4
+ #       if: env.BUILD_CONTEXT == 'ci'
+ #       with:
+ #         mode: minimum
+ #         count: 1
+ #         labels: "ok-to-test, lgtm, approved"
+ #     - uses: actions/checkout@v3
+ #       if: env.BUILD_CONTEXT == 'ci'
+ #       with:
+ #         ref: ${{ github.event.pull_request.head.sha }}
+ #     - uses: actions/checkout@v3
+ #       if: env.BUILD_CONTEXT == 'main' ||  env.BUILD_CONTEXT == 'tag'
       #
       # Print variables for debugging
       - name: Log reference variables
@@ -79,7 +79,7 @@ jobs:
           echo "ORCH_IMAGE_NAME=quay.io/trustyais390x/guardrails" >> $GITHUB_ENV
 
       - name: Set main-branch environment
-        if:  env.BUILD_CONTEXT == 'main'
+        if:  env.BUILD_CONTEXT == 'multiarch_build'
         run: |
           echo "TAG=latest" >> $GITHUB_ENV
           echo "IMAGE_NAME=${{ vars.QUAY_RELEASE_REPO }}" >> $GITHUB_ENV
@@ -87,19 +87,19 @@ jobs:
           echo "JOB_IMAGE_NAME=${{ vars.QUAY_RELEASE_LMES_JOB_REPO }}" >> $GITHUB_ENV
           echo "ORCH_IMAGE_NAME=${{ vars.QUAY_RELEASE_GUARDRAILS_REPO }}" >> $GITHUB_ENV
 
-      - name: Set tag environment
-        if: env.BUILD_CONTEXT == 'tag'
-        run: |
-          echo "TAG=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo "IMAGE_NAME=${{ vars.QUAY_RELEASE_REPO }}" >> $GITHUB_ENV
-          echo "DRIVER_IMAGE_NAME=${{ vars.QUAY_RELEASE_LMES_DRIVER_REPO }}" >> $GITHUB_ENV
-          echo "JOB_IMAGE_NAME=${{ vars.QUAY_RELEASE_LMES_JOB_REPO }}" >> $GITHUB_ENV
-          echo "ORCH_IMAGE_NAME=${{ vars.QUAY_RELEASE_GUARDRAILS_REPO }}" >> $GITHUB_ENV
+    #  - name: Set tag environment
+    #    if: env.BUILD_CONTEXT == 'tag'
+    #    run: |
+    #      echo "TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+    #      echo "IMAGE_NAME=${{ vars.QUAY_RELEASE_REPO }}" >> $GITHUB_ENV
+    #      echo "DRIVER_IMAGE_NAME=${{ vars.QUAY_RELEASE_LMES_DRIVER_REPO }}" >> $GITHUB_ENV
+    #      echo "JOB_IMAGE_NAME=${{ vars.QUAY_RELEASE_LMES_JOB_REPO }}" >> $GITHUB_ENV
+    #      echo "ORCH_IMAGE_NAME=${{ vars.QUAY_RELEASE_GUARDRAILS_REPO }}" >> $GITHUB_ENV
 
       # Run docker commands
-      - name: Put expiry date on CI-tagged image
-        if:  env.BUILD_CONTEXT == 'ci'
-        run: sed -i 's#summary="odh-trustyai-service-operator\"#summary="odh-trustyai-service-operator" \\ \n      quay.expires-after=7d#' Dockerfile
+    #  - name: Put expiry date on CI-tagged image
+    #    if:  env.BUILD_CONTEXT == 'ci'
+    #    run: sed -i 's#summary="odh-trustyai-service-operator\"#summary="odh-trustyai-service-operator" \\ \n      quay.expires-after=7d#' Dockerfile
       - name: Log in to Quay
         run: docker login -u ${{ secrets.QUAY_ROBOT_USERNAME }} -p ${{ secrets.QUAY_ROBOT_SECRET }} quay.io
 
