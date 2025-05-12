@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - multiarch_build
     tags:
       - v*
     paths-ignore:
@@ -71,10 +72,10 @@ jobs:
         if:  env.BUILD_CONTEXT == 'ci'
         run: |
           echo "TAG=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
-          echo "IMAGE_NAME=quay.io/trustyai/trustyai-service-operator-ci" >> $GITHUB_ENV
-          echo "DRIVER_IMAGE_NAME=quay.io/trustyai/ta-lmes-driver-ci" >> $GITHUB_ENV
-          echo "JOB_IMAGE_NAME=quay.io/trustyai/ta-lmes-job-ci" >> $GITHUB_ENV
-          echo "ORCH_IMAGE_NAME=quay.io/trustyai/ta-guardrails-orchestrator-ci" >> $GITHUB_ENV
+          echo "IMAGE_NAME=quay.io/trustyais390x/operator-ci" >> $GITHUB_ENV
+          echo "DRIVER_IMAGE_NAME=quay.io/trustyais390x/lmeval-driver" >> $GITHUB_ENV
+          echo "JOB_IMAGE_NAME=quay.io/trustyais390x/lmeval-job" >> $GITHUB_ENV
+          echo "ORCH_IMAGE_NAME=quay.io/trustyais390x/guardrails" >> $GITHUB_ENV
 
       - name: Set main-branch environment
         if:  env.BUILD_CONTEXT == 'main'
@@ -147,78 +148,3 @@ jobs:
           platforms: linux/amd64
           tags: ${{ env.ORCH_IMAGE_NAME }}:${{ env.TAG }}
           push: true
-
-      # Create CI Manifests
-      - name: Set up manifests for CI
-        if: env.BUILD_CONTEXT == 'ci'
-        run: |
-          sed -i "s#quay.io/trustyai/trustyai-service-operator:latest#${{ env.IMAGE_NAME }}:$TAG#" ./config/base/params.env
-          sed -i "s#quay.io/trustyai/trustyai-service-operator:latest#${{ env.IMAGE_NAME }}:$TAG#" ./config/overlays/odh/params.env
-          sed -i "s#quay.io/trustyai/trustyai-service-operator:latest#${{ env.IMAGE_NAME }}:$TAG#" ./config/overlays/rhoai/params.env
-          rm -Rf $(ls . | grep -v config)
-          rm -Rf .gitignore .dockerignore .github .git .yamllint.yaml
-      # pysh to ci-manifest repo
-      - uses: cpina/github-action-push-to-another-repository@main
-        if:  env.BUILD_CONTEXT == 'ci'
-        env:
-          SSH_DEPLOY_KEY: ${{ secrets.TRUSTYAI_CI_BOT_SSH_KEY}}
-        with:
-          source-directory: '.'
-          destination-github-username: 'trustyai-ci-bot'
-          destination-repository-username: 'trustyai-explainability'
-          destination-repository-name: 'trustyai-service-operator-ci'
-          target-branch: operator-${{ env.TAG }}
-          create-target-branch-if-needed: 'true'
-
-      # Leave comment
-      - uses: peter-evans/find-comment@v3
-        name: Find Comment
-        id: fc
-        if: env.BUILD_CONTEXT == 'ci'
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: PR image build and manifest generation completed successfully
-      - uses: peter-evans/create-or-update-comment@v4
-        name: Generate/update success message comment
-        if: env.BUILD_CONTEXT == 'ci'
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          edit-mode: replace
-          body: |
-            PR image build and manifest generation completed successfully!
-
-            📦 [PR image](https://quay.io/trustyai/trustyai-service-operator-ci:${{ github.event.pull_request.head.sha }}): `quay.io/trustyai/trustyai-service-operator-ci:${{ github.event.pull_request.head.sha }}`
-
-            📦 [LMES driver image](https://quay.io/trustyai/ta-lmes-driver:${{ github.event.pull_request.head.sha }}): `quay.io/trustyai/ta-lmes-driver:${{ github.event.pull_request.head.sha }}`
-
-            📦 [LMES job image](https://quay.io/trustyai/ta-lmes-job:${{ github.event.pull_request.head.sha }}): `quay.io/trustyai/ta-lmes-job:${{ github.event.pull_request.head.sha }}`
-
-            📦 [Guardrails orchestrator image](https://quay.io/trustyai/ta-guardrails-orchestrator:${{ github.event.pull_request.head.sha }}): `quay.io/trustyai/ta-guardrails-orchestrator:${{ github.event.pull_request.head.sha }}`
-
-            🗂️ [CI manifests](https://github.com/trustyai-explainability/trustyai-service-operator-ci/tree/operator-${{ env.TAG }})
-
-            ```
-            devFlags:
-              manifests:
-                - contextDir: config
-                  sourcePath: ''
-                  uri: https://api.github.com/repos/trustyai-explainability/trustyai-service-operator-ci/tarball/operator-${{ env.TAG }}
-            ```
-      - name: Trivy scan
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: 'image'
-          image-ref: "${{ env.IMAGE_NAME }}:${{ env.TAG }}"
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'MEDIUM,HIGH,CRITICAL'
-          exit-code: '0'
-          ignore-unfixed: false
-          vuln-type: 'os,library'
-
-      - name: Update Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
